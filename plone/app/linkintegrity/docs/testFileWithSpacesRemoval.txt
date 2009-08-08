@@ -10,7 +10,7 @@ spaces in its id.  First we need to rename the existing file:
 Check that the file is there with the id that we expect:
 
   >>> portal['some spaces.doc']
-  <ATFile at /plone/some spaces.doc>
+  <ATBlob at /plone/some spaces.doc>
 
 Now we create the necessary links:
 
@@ -22,7 +22,7 @@ Now we create the necessary links:
 The document should now have a reference to the file:
 
   >>> p.doc1.getRefs()
-  [<ATFile at /plone/some spaces.doc>]
+  [<ATBlob at /plone/some spaces.doc>]
 
 Then we use a browser to try to delete the referenced file.  Before we
 can do this we need to prevent the test framework from choking on the

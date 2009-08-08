@@ -10,7 +10,7 @@ to create the necessary links:
 The document should now have a reference to the file:
 
   >>> p.doc1.getRefs()
-  [<ATFile at /plone/file1>]
+  [<ATBlob at /plone/file1>]
 
 Then we use a browser to try to delete the referenced file.  Before we
 can do this we need to prevent the test framework from choking on the

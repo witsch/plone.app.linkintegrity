@@ -1,13 +1,13 @@
+from plone.app.blob.tests import bbb        # needs to be imported first
 from AccessControl.SecurityManagement import newSecurityManager
 from Testing import ZopeTestCase
 from Products.PloneTestCase import PloneTestCase
-from Products.PloneTestCase.layer import PloneSite
 from StringIO import StringIO
 from base64 import decodestring
 from transaction import commit
 
 
-class PloneLinkintegrity(PloneSite):
+class PloneLinkintegrity(bbb.plone):
 
     @classmethod
     def setUp(cls):
@@ -18,6 +18,16 @@ class PloneLinkintegrity(PloneSite):
         uf = app.acl_users
         user = uf.getUserById(PloneTestCase.portal_owner).__of__(uf)
         newSecurityManager(None, user)
+
+        # the mimetype registry isn't registered as a utility for some
+        # reason when trying to add content during the layer setup;  this
+        # is most likely due to call `app()` again (see above), which seems
+        # to no be a good idea... :)  however, loading the GS profile of
+        # `Products.MimetypesRegistry` again helps
+        from Products.CMFCore.utils import getToolByName
+        tool = getToolByName(portal, 'portal_setup')
+        profile = 'profile-Products.MimetypesRegistry:MimetypesRegistry'
+        tool.runAllImportStepsFromProfile(profile, purge_old=False)
 
         # create sample content
         gif = 'R0lGODlhAQABAPAAAPj8+AAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
