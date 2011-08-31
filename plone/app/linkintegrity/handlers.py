@@ -8,9 +8,11 @@ from Products.Archetypes.exceptions import ReferenceException
 from OFS.interfaces import IItem
 from ZODB.POSException import ConflictError
 from zExceptions import NotFound
+import zope.component
 from zope.publisher.interfaces import NotFound as ztkNotFound
 from exceptions import LinkIntegrityNotificationException
 from interfaces import ILinkIntegrityInfo, IOFSImage
+from interfaces import IReferencesUpdater
 from urlparse import urlsplit
 from parser import extractLinks
 from urllib import unquote
@@ -62,17 +64,31 @@ def getObjectsFromLinks(base, links):
 
 def modifiedArchetype(obj, event):
     """ an archetype based object was modified """
-    try:    # TODO: is this a bug or a needed workaround?
-        existing = set(obj.getReferences(relationship=referencedRelationship))
-    except AttributeError:
-        return
-    refs = set()
-    for field in obj.Schema().fields():
-        if isinstance(field, TextField):
-            accessor = field.getAccessor(obj)
-            links = extractLinks(accessor())
-            refs = refs.union(getObjectsFromLinks(obj, links))
-    updateReferences(obj, referencedRelationship, refs, existing)
+
+    refs_to_update = {}
+    for subscriber in zope.component.subscribers((obj,), IReferencesUpdater):
+        subscriber.update(refs_to_update)
+    for relationship in refs_to_update:
+        try:    # TODO: is this a bug or a needed workaround?
+            existing = set(obj.getReferences(relationship=relationship))
+        except AttributeError:
+            return
+        refs = refs_to_update[relationship]
+        updateReferences(obj, referencedRelationship, refs, existing)
+
+
+class LinksReferences(object):
+    def __init__(self, context):
+        self.context = context
+
+    def update(self, refs_to_update):
+        refs = refs_to_update.setdefault(referencedRelationship, set())
+        for field in self.context.Schema().fields():
+            if isinstance(field, TextField):
+                accessor = field.getAccessor(self.context)
+                links = extractLinks(accessor())
+                refs = refs.union(getObjectsFromLinks(self.context, links))
+        refs_to_update[referencedRelationship] = refs
 
 
 def updateReferences(obj, relationship, newrefs, existing):

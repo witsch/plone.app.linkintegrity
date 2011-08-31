@@ -54,6 +54,12 @@
     handler=".handlers.referencedObjectRemoved" />
 
   <subscriber
+      provides=".interfaces.IReferencesUpdater"
+      factory=".handlers.LinksReferences"
+      for="Products.Archetypes.interfaces.IBaseObject"
+      />
+
+  <subscriber
     for="Products.Archetypes.interfaces.IReference
          zope.app.container.interfaces.IObjectRemovedEvent" 
     handler=".handlers.referenceRemoved" />
