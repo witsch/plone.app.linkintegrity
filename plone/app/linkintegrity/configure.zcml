@@ -54,10 +54,9 @@
     handler=".handlers.referencedObjectRemoved" />
 
   <subscriber
-      provides=".interfaces.IReferencesUpdater"
-      factory=".handlers.LinksReferences"
-      for="Products.Archetypes.interfaces.IBaseObject"
-      />
+    for="Products.Archetypes.interfaces.IBaseObject"
+    provides=".interfaces.IReferencesUpdater"
+    factory=".handlers.LinksReferences" />
 
   <subscriber
     for="Products.Archetypes.interfaces.IReference

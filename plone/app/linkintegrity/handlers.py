@@ -8,7 +8,7 @@ from Products.Archetypes.exceptions import ReferenceException
 from OFS.interfaces import IItem
 from ZODB.POSException import ConflictError
 from zExceptions import NotFound
-import zope.component
+from zope.component import subscribers
 from zope.publisher.interfaces import NotFound as ztkNotFound
 from exceptions import LinkIntegrityNotificationException
 from interfaces import ILinkIntegrityInfo, IOFSImage
@@ -67,9 +67,8 @@ def getObjectsFromLinks(base, links):
 
 def modifiedArchetype(obj, event):
     """ an archetype based object was modified """
-
     refs_to_update = {}
-    for subscriber in zope.component.subscribers((obj,), IReferencesUpdater):
+    for subscriber in subscribers((obj,), IReferencesUpdater):
         subscriber.update(refs_to_update)
     for relationship in refs_to_update:
         existing = set(obj.getReferences(relationship=relationship))
