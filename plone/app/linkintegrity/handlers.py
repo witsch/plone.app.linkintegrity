@@ -71,7 +71,7 @@ def modifiedArchetype(obj, event):
     for subscriber in subscribers((obj,), IReferencesUpdater):
         subscriber.update(refs_to_update)
     for relationship, refs in refs_to_update.items():
-        updateReferences(obj, referencedRelationship, refs)
+        updateReferences(obj, relationship, refs)
 
 
 class LinksReferences(object):
