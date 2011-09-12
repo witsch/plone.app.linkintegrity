@@ -70,8 +70,7 @@ def modifiedArchetype(obj, event):
     refs_to_update = {}
     for subscriber in subscribers((obj,), IReferencesUpdater):
         subscriber.update(refs_to_update)
-    for relationship in refs_to_update:
-        refs = refs_to_update[relationship]
+    for relationship, refs in refs_to_update.items():
         updateReferences(obj, referencedRelationship, refs)
 
 
