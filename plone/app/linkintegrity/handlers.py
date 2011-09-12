@@ -71,9 +71,8 @@ def modifiedArchetype(obj, event):
     for subscriber in subscribers((obj,), IReferencesUpdater):
         subscriber.update(refs_to_update)
     for relationship in refs_to_update:
-        existing = set(obj.getReferences(relationship=relationship))
         refs = refs_to_update[relationship]
-        updateReferences(obj, referencedRelationship, refs, existing)
+        updateReferences(obj, referencedRelationship, refs)
 
 
 class LinksReferences(object):
@@ -92,9 +91,10 @@ class LinksReferences(object):
                 refs |= getObjectsFromLinks(self.context, links)
 
 
-def updateReferences(obj, relationship, newrefs, existing):
+def updateReferences(obj, relationship, newrefs):
     """ update references set on object using the given set in a 'gentle'
         way, i.e. avoiding to re-add already existing ones """
+    existing = set(obj.getReferences(relationship=relationship))
     for ref in newrefs.difference(existing):   # add new references and...
         try:
             obj.addReference(ref, relationship=relationship)
