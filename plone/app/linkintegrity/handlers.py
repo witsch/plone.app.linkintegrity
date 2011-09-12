@@ -23,8 +23,13 @@ referencedRelationship = 'isReferencing'
 
 def findObject(base, path):
     """ traverse to given path and find the upmost object """
-    obj = base
-    components = path.split('/')
+    if path.startswith('/'):
+        obj = getToolByName(base, 'portal_url').getPortalObject()
+        portal_path = '/'.join(obj.getPhysicalPath())
+        components = path.lstrip(portal_path + '/').split('/')
+    else:
+        obj = aq_parent(base)   # relative urls start at the parent...
+        components = path.split('/')
     while components:
         child_id = unquote(components[0])
         try:
@@ -67,10 +72,7 @@ def modifiedArchetype(obj, event):
     for subscriber in zope.component.subscribers((obj,), IReferencesUpdater):
         subscriber.update(refs_to_update)
     for relationship in refs_to_update:
-        try:    # TODO: is this a bug or a needed workaround?
-            existing = set(obj.getReferences(relationship=relationship))
-        except AttributeError:
-            return
+        existing = set(obj.getReferences(relationship=relationship))
         refs = refs_to_update[relationship]
         updateReferences(obj, referencedRelationship, refs, existing)
 
