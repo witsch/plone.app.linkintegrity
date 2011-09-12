@@ -89,8 +89,7 @@ class LinksReferences(object):
             if isinstance(field, TextField):
                 accessor = field.getAccessor(self.context)
                 links = extractLinks(accessor())
-                refs = refs.union(getObjectsFromLinks(self.context, links))
-        refs_to_update[referencedRelationship] = refs
+                refs |= getObjectsFromLinks(self.context, links)
 
 
 def updateReferences(obj, relationship, newrefs, existing):
