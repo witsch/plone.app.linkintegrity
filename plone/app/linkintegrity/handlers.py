@@ -75,13 +75,27 @@ def modifiedArchetype(obj, event):
         updateReferences(obj, referencedRelationship, refs, existing)
 
 
-def updateReferences(obj, relationship, refs, existing):
-    for ref in refs.difference(existing):   # add new references and...
+class LinksReferences(object):
+    def __init__(self, context):
+        self.context = context
+
+    def update(self, refs_to_update):
+        refs = refs_to_update.setdefault(referencedRelationship, set())
+        for field in self.context.Schema().fields():
+            if isinstance(field, TextField):
+                accessor = field.getAccessor(self.context)
+                links = extractLinks(accessor())
+                refs = refs.union(getObjectsFromLinks(self.context, links))
+        refs_to_update[referencedRelationship] = refs
+
+
+def updateReferences(obj, relationship, newrefs, existing):
+    for ref in newrefs.difference(existing):   # add new references and...
         try:
             obj.addReference(ref, relationship=relationship)
         except ReferenceException:
             pass
-    for ref in existing.difference(refs):   # removed leftovers
+    for ref in existing.difference(newrefs):   # removed leftovers
         try:
             obj.deleteReference(ref, relationship=relationship)
         except ReferenceException:
@@ -109,20 +123,6 @@ def removeDanglingReference(obj, relationship):
             'reference to %r could not be removed.', obj)
 
 
-class LinksReferences(object):
-    def __init__(self, context):
-        self.context = context
-
-    def update(self, refs_to_update):
-        refs = refs_to_update.setdefault(referencedRelationship, set())
-        for field in self.context.Schema().fields():
-            if isinstance(field, TextField):
-                accessor = field.getAccessor(self.context)
-                links = extractLinks(accessor())
-                refs = refs.union(getObjectsFromLinks(self.context, links))
-        refs_to_update[referencedRelationship] = refs
-
-
 def referenceRemoved(obj, event):
     """ store information about the removed link integrity reference """
     assert IReference.providedBy(obj)
@@ -136,9 +136,10 @@ def referenceRemoved(obj, event):
     if not request:
         return
     storage = ILinkIntegrityInfo(request)
-    breaches = storage.getIntegrityBreaches()
-    breaches.setdefault(obj.getTargetObject(), set()).add(obj.getSourceObject())
-    storage.setIntegrityBreaches(breaches)
+    all_breaches = storage.getIntegrityBreaches()
+    obj_breaches = all_breaches.setdefault(obj.getTargetObject(), set())
+    obj_breaches.add(obj.getSourceObject())
+    storage.setIntegrityBreaches(all_breaches)
 
 
 def referencedObjectRemoved(obj, event):
