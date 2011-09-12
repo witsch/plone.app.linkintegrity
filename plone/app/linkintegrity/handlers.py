@@ -77,6 +77,9 @@ def modifiedArchetype(obj, event):
 
 
 class LinksReferences(object):
+    """ extract html links used in the given Archetypes content object
+        and use them to update the given integrity references """
+
     def __init__(self, context):
         self.context = context
 
@@ -91,6 +94,8 @@ class LinksReferences(object):
 
 
 def updateReferences(obj, relationship, newrefs, existing):
+    """ update references set on object using the given set in a 'gentle'
+        way, i.e. avoiding to re-add already existing ones """
     for ref in newrefs.difference(existing):   # add new references and...
         try:
             obj.addReference(ref, relationship=relationship)
