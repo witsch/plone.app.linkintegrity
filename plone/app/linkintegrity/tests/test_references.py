@@ -1,8 +1,24 @@
+from zope.component import adapts, getGlobalSiteManager
+from zope.interface import implements
 from Products.PloneTestCase import PloneTestCase
+from Products.Archetypes.interfaces import IBaseObject
+from plone.app.linkintegrity.interfaces import IReferencesUpdater
 from plone.app.linkintegrity.tests.utils import getBrowser
 
 
 PloneTestCase.setupPloneSite()
+
+
+class ReferenceReferences(object):
+    adapts(IBaseObject)
+    implements(IReferencesUpdater)
+
+    def __init__(self, context):
+        self.context = context
+
+    def update(self, refs):
+        import pdb; pdb.set_trace( )
+        refs['hurz!'] = set(self.context.getReferences(relationship='hurz!'))
 
 
 class ReferenceGenerationTests(PloneTestCase.FunctionalTestCase):
@@ -39,6 +55,24 @@ class ReferenceGenerationTests(PloneTestCase.FunctionalTestCase):
         self.assertTrue('dox rule' in browser.contents)
         # the internal reference should do the same...
         self.assertEqual(doc.getReferences(), [portal.main.foo.doc])
+
+    def testAdditionalReferencesCanBeCreatedViaSubscribers(self):
+        self.setRoles(['Manager'])
+        foo = self.portal[self.portal.invokeFactory('Document', id='foo')]
+        bar = self.portal[self.portal.invokeFactory('Document', id='bar')]
+        # let's assume we have a subscription adapter treating references
+        # to be important with regard to content integrity...
+        gsm = getGlobalSiteManager()
+        gsm.registerSubscriptionAdapter(ReferenceReferences)
+        # now we create a reference & try to delete the originating document...
+        foo.addReference(bar, relationship='hurz!')
+        foo.processForm()           # trigger update of integrity references...
+        browser = getBrowser(loggedIn=True)
+        browser.open(foo.absolute_url())
+        browser.getLink('Delete').click()
+        import pdb; pdb.set_trace( )
+        self.assertTrue('Do you really want to delete this item?' in browser.contents)
+
 
     def testReferencesToNonAccessibleContentAreGenerated(self):
         self.loginAsPortalOwner()
