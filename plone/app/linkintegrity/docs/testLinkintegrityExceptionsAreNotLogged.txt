@@ -1,0 +1,22 @@
+This tests makes sure the exceptions raised in order to trigger the link
+integrity confirmations, do not end up in the site's error log.
+
+First we create a link:
+
+  >>> self.setRoles(('Manager',))
+  >>> self.setText(portal.doc1, portal.image1.tag())
+
+Then we use a browser to try to delete the referenced image.  Before we
+can do this we need to prevent the test framework from choking on the
+exception we intentionally throw (see docs/testRemovalTriggersConfirmation.txt
+for more info):
+
+  >>> self.setStatusCode('LinkIntegrityNotificationException', 200)
+  >>> browser = self.getBrowser(loggedIn=True)
+  >>> browser.open('http://nohost/plone/image1/view')
+  >>> browser.getLink('Delete').click()
+
+The site's error log should be empty:
+
+  >>> len(portal.error_log.getLogEntries())
+  0

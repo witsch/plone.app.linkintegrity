@@ -14,3 +14,7 @@ def initialize(context):
 
     # Install the wrapper around zpublisher_exception_hook.
     monkey.installExceptionHook()
+
+    # don't log the linkintegrity exception
+    import pdb; pdb.set_trace( )
+    # context.error_log.getProperties()
